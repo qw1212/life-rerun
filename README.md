@@ -80,11 +80,12 @@ npm run server
 ├── docs/
 │   ├── plan.md              # 开发计划
 │   ├── design.md            # 游戏与心理机制设计
-│   ├── psychology-guide.md  # 心理学理论与实践指导
-│   └── tech-stack.md        # 技术栈详细说明
+│   └── psychology-guide.md  # 心理学理论与实践指导
 ├── README.md
 └── package.json
 ```
+
+详细心理学设计指导见 [docs/psychology-guide.md](docs/psychology-guide.md)。
 
 ## 核心属性
 
