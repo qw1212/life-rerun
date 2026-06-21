@@ -20,6 +20,9 @@ export class OpenAICompatibleProvider implements AIProvider {
       { role: 'user', content: buildUserPrompt(player) + SAFETY_PROMPT_SUFFIX },
     ]
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 25000)
+
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -32,7 +35,10 @@ export class OpenAICompatibleProvider implements AIProvider {
         temperature: 0.8,
         response_format: { type: 'json_object' },
       }),
+      signal: controller.signal,
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const text = await response.text()

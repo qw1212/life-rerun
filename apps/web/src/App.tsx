@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usePlayerStore } from './store/playerStore.js'
 import { generateNarrative } from './services/api.js'
 import { WelcomePage } from './pages/WelcomePage.js'
@@ -106,10 +106,10 @@ function App() {
     }
   }
 
-  function handleSelectOption(option: StoryOption) {
+  const handleSelectOption = useCallback((option: StoryOption) => {
     if (!currentEvent || !player) return
     selectOption(option, currentEvent)
-  }
+  }, [currentEvent, player, selectOption])
 
   function handleCreate(name: string, talents: Talent[], mood: string) {
     createPlayer(name, talents, mood)

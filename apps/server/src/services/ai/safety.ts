@@ -17,6 +17,9 @@ const BLOCKED_KEYWORDS = [
 
 const LOW_MOOD_KEYWORDS = ['失落', '绝望', '崩溃', '痛苦', '孤独', '焦虑', '抑郁']
 
+export const SUPPORT_MESSAGE =
+  '如果你正在经历严重的心理困扰，请寻求专业帮助。中国心理危机干预热线：400-161-9995（24小时）。你并不孤单。'
+
 export interface SafetyCheckResult {
   safe: boolean
   reason?: string
@@ -33,7 +36,8 @@ export function checkInputSafety(text: string): SafetyCheckResult {
       needsSupport: true,
     }
   }
-  return { safe: true, needsSupport: false }
+  const needsSupport = LOW_MOOD_KEYWORDS.some((k) => lower.includes(k.toLowerCase()))
+  return { safe: true, needsSupport }
 }
 
 export function checkOutputSafety(content: string): SafetyCheckResult {

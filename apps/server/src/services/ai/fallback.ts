@@ -1,5 +1,5 @@
 import { EVENTS, getEventsByStage, canTriggerEvent, calcEventWeight, pickWeightedEvent, type NarrativeResponse, type PlayerState, type GameEvent } from '@life-rerun/shared'
-import { checkOutputSafety, sanitizeStory } from './safety.js'
+import { checkOutputSafety, sanitizeStory, SUPPORT_MESSAGE } from './safety.js'
 
 function pickFallbackEvent(player: PlayerState): GameEvent {
   const stageEvents = getEventsByStage(player.stage)
@@ -14,15 +14,15 @@ function pickFallbackEvent(player: PlayerState): GameEvent {
   return pickWeightedEvent(candidates, weights) || candidates[0]
 }
 
-export function generateFallbackNarrative(player: PlayerState): NarrativeResponse {
+export function generateFallbackNarrative(player: PlayerState, needsSupport = false): NarrativeResponse {
   const event = pickFallbackEvent(player)
   const story = sanitizeStory(event.story)
     .replace(/你/g, `${player.name || '你'}`)
     .replace(/\$\{age\}/g, String(player.age))
 
   const safety = checkOutputSafety(story)
-  const psychologyHint = safety.needsSupport
-    ? '此刻也许不容易，但你并不孤单，困难会过去。'
+  const psychologyHint = needsSupport || safety.needsSupport
+    ? `${event.psychologyHint} ${SUPPORT_MESSAGE}`
     : event.psychologyHint
 
   return {
@@ -37,7 +37,7 @@ export function generateFallbackNarrative(player: PlayerState): NarrativeRespons
       },
     })),
     psychologyHint,
-    attributeChanges: event.permaTags ? {} : {},
+    attributeChanges: {},
     permaChanges: event.permaTags || {},
   }
 }

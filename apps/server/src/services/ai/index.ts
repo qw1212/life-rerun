@@ -9,7 +9,7 @@ export async function generateNarrative(player: PlayerState): Promise<NarrativeR
   const historyText = player.history.map((h) => h.eventTitle).join(' ')
   const inputCheck = checkInputSafety(historyText)
   if (!inputCheck.safe) {
-    return generateFallbackNarrative(player)
+    return generateFallbackNarrative(player, inputCheck.needsSupport)
   }
 
   // 2. 读取缓存
@@ -24,7 +24,7 @@ export async function generateNarrative(player: PlayerState): Promise<NarrativeR
       const outputCheck = checkOutputSafety(response.story)
       if (!outputCheck.safe) {
         console.warn('AI output failed safety check:', outputCheck.reason)
-        return generateFallbackNarrative(player)
+        return generateFallbackNarrative(player, outputCheck.needsSupport)
       }
       setCachedNarrative(player, response)
       return response
@@ -34,7 +34,7 @@ export async function generateNarrative(player: PlayerState): Promise<NarrativeR
   }
 
   // 4. 降级到模板事件库
-  return generateFallbackNarrative(player)
+  return generateFallbackNarrative(player, inputCheck.needsSupport)
 }
 
 export * from './provider.js'
