@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { PlayerState, GameEvent, StoryOption } from '@life-rerun/shared'
-import { Save, Download, RotateCcw, Heart } from 'lucide-react'
+import { Save, Download, RotateCcw, Heart, PauseCircle } from 'lucide-react'
 import { AttributePanel } from '../components/AttributePanel.js'
 import { EventCard } from '../components/EventCard.js'
+import { EpiphanyPage } from './EpiphanyPage.js'
 import { LifeTimeline } from '../components/LifeTimeline.js'
+import { BreathingOverlay } from '../components/BreathingOverlay.js'
 
 interface Props {
   player: PlayerState
@@ -51,6 +54,8 @@ export function MainGamePage({
   onExport,
   onReset,
 }: Props) {
+  const [showBreathing, setShowBreathing] = useState(false)
+
   return (
     <main className="min-h-screen p-4 sm:p-6 bg-warm-50">
       <div className="max-w-3xl mx-auto space-y-5">
@@ -67,6 +72,13 @@ export function MainGamePage({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBreathing(true)}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-hope-50 hover:bg-hope-100 text-hope-700 rounded-lg transition-colors"
+            >
+              <PauseCircle className="w-4 h-4" />
+              暂停
+            </button>
             <button
               onClick={onSave}
               className="flex items-center gap-1 px-3 py-2 text-sm bg-warm-100 hover:bg-warm-200 text-warm-800 rounded-lg transition-colors"
@@ -97,7 +109,11 @@ export function MainGamePage({
           resilience={player.resilience}
         />
 
-        {currentEvent && (
+        {currentEvent && currentEvent.type === 'insight' && (
+          <EpiphanyPage event={currentEvent} onSelect={onSelectOption} />
+        )}
+
+        {currentEvent && currentEvent.type !== 'insight' && (
           <EventCard event={currentEvent} onSelect={onSelectOption} />
         )}
 
@@ -170,6 +186,8 @@ export function MainGamePage({
 
         <LifeTimeline player={player} />
       </div>
+
+      <BreathingOverlay open={showBreathing} onClose={() => setShowBreathing(false)} />
     </main>
   )
 }

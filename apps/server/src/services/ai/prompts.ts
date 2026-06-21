@@ -27,6 +27,8 @@ export function buildUserPrompt(player: PlayerState): string {
     .map((h) => `${h.age}岁：${h.eventTitle}，你选择了「${h.selectedOptionText}」`)
     .join('\n')
 
+  const gratitudeSummary = player.gratitudeLog.slice(-3).join('、') || '暂无'
+
   return `请根据以下玩家状态，续写一段人生故事并提供 3 个选择。
 
 玩家状态：
@@ -37,16 +39,19 @@ export function buildUserPrompt(player: PlayerState): string {
 - 当前情绪标签：${player.emotionTags.join('、') || '平静'}
 - 心理韧性：${player.resilience}
 - 六维属性：智力${player.attributes.intelligence}，体质${player.attributes.physique}，魅力${player.attributes.charm}，家境${player.attributes.wealth}，运气${player.attributes.luck}，心理韧性${player.attributes.resilience}
+- PERMA 五维：积极${player.perma.positive}，投入${player.perma.engagement}，关系${player.perma.relationships}，意义${player.perma.meaning}，成就${player.perma.achievement}
 - 已拥有天赋：${player.talents.map((t) => t.name).join('、') || '无'}
+- 近期感恩记录：${gratitudeSummary}
 - 近期人生事件：
 ${historySummary || '暂无'}
 
 要求：
 1. 故事要符合玩家的年龄阶段、主线方向和情绪状态。
 2. 3 个选项应体现不同的价值观与应对策略（稳妥、冒险、关系、成长、接纳、意义）。
-3. 每个选项的 effect 应合理，数值变化在 -3 到 +3 之间。
+3. 每个选项的 effect 应合理，数值变化在 -3 到 +3 之间，并可以适当影响 PERMA 维度。
 4. 低谷事件后必须提供带有成长出口的选项。
-5. 返回纯 JSON，不要任何额外说明。`
+5. 如果玩家近期有感恩记录，可以在故事中温柔地呼应其中一件小事。
+6. 返回纯 JSON，不要任何额外说明。`
 }
 
 export const SAFETY_PROMPT_SUFFIX = `

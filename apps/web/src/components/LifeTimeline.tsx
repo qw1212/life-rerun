@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import type { PlayerState, HistoryRecord } from '@life-rerun/shared'
-import { Baby, Footprints, GraduationCap, Briefcase, Heart, Award } from 'lucide-react'
+import { Baby, Footprints, GraduationCap, Briefcase, Heart, Award, Star } from 'lucide-react'
 
 interface Props {
   player: PlayerState
@@ -40,6 +40,12 @@ const ATTRIBUTE_LABELS = {
   wealth: '家境',
   luck: '运气',
   resilience: '韧性',
+}
+
+function isBraveChoice(record: HistoryRecord): boolean {
+  const resilienceChange = record.attributeChanges.resilience || 0
+  const positiveChanges = Object.values(record.attributeChanges).filter((v) => (v || 0) > 0).length
+  return resilienceChange > 0 || positiveChanges >= 2
 }
 
 export function LifeTimeline({ player }: Props) {
@@ -95,9 +101,21 @@ export function LifeTimeline({ player }: Props) {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: ageIndex * 0.05 + index * 0.05 }}
-                      className="rounded-xl border border-stone-100 bg-warm-50/50 p-4"
+                      className={`rounded-xl border p-4 ${
+                        isBraveChoice(record)
+                          ? 'bg-hope-50/60 border-hope-200'
+                          : 'bg-warm-50/50 border-stone-100'
+                      }`}
                     >
-                      <div className="font-medium text-stone-800">{record.eventTitle}</div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-medium text-stone-800">{record.eventTitle}</div>
+                        {isBraveChoice(record) && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-hope-100 text-hope-700 shrink-0">
+                            <Star className="w-3 h-3" />
+                            勇敢选择
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-stone-600 mt-1">
                         选择：{record.selectedOptionText}
                       </div>
