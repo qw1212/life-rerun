@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion'
-import type { GameEvent, StoryOption } from '@life-rerun/shared'
-import { Sparkles } from 'lucide-react'
+import type { GameEvent, StoryOption, PlayerState } from '@life-rerun/shared'
+import { isOptionUnlocked } from '@life-rerun/shared'
+import { Sparkles, Lock } from 'lucide-react'
 
 interface Props {
   event: GameEvent
+  player: PlayerState
   onSelect: (option: StoryOption) => void
 }
 
@@ -25,7 +27,18 @@ const TYPE_LABEL: Record<GameEvent['type'], string> = {
   milestone: '节点',
 }
 
-export function EventCard({ event, onSelect }: Props) {
+const OPTION_TYPE_LABEL: Record<StoryOption['type'], string> = {
+  safe: '稳妥',
+  adventure: '冒险',
+  relationship: '关系',
+  growth: '成长',
+  acceptance: '接纳',
+  meaning: '意义',
+}
+
+export function EventCard({ event, player, onSelect }: Props) {
+  const visibleOptions = event.options.filter((option) => isOptionUnlocked(player, option))
+
   return (
     <motion.article
       key={event.id}
@@ -45,7 +58,7 @@ export function EventCard({ event, onSelect }: Props) {
       <p className="text-stone-700 leading-relaxed text-base sm:text-lg mb-8">{event.story}</p>
 
       <div className="space-y-3">
-        {event.options.map((option, index) => (
+        {visibleOptions.map((option, index) => (
           <motion.button
             key={option.id}
             initial={{ opacity: 0, x: -10 }}
@@ -55,7 +68,7 @@ export function EventCard({ event, onSelect }: Props) {
             className="group w-full text-left px-5 py-4 rounded-xl border border-warm-200 hover:border-hope-400 hover:bg-hope-50 transition-all"
           >
             <div className="flex items-start justify-between">
-              <div>
+              <div className="flex-1">
                 <div className="font-medium text-stone-800 group-hover:text-hope-800 transition-colors">
                   {option.text}
                 </div>
@@ -66,10 +79,19 @@ export function EventCard({ event, onSelect }: Props) {
                   </div>
                 )}
               </div>
-              <div className="text-xs text-stone-400 capitalize">{option.type}</div>
+              <div className="text-xs text-stone-400 capitalize ml-3 shrink-0">
+                {OPTION_TYPE_LABEL[option.type]}
+              </div>
             </div>
           </motion.button>
         ))}
+
+        {event.options.some((option) => option.hidden) && (
+          <div className="flex items-center gap-1.5 text-xs text-stone-400 pt-1">
+            <Lock className="w-3 h-3" />
+            部分隐藏选项将根据你的属性或经历解锁
+          </div>
+        )}
       </div>
 
       <motion.p

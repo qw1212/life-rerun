@@ -178,13 +178,22 @@
 
 ## 第九阶段：打包与部署
 
-37. 编写后端 Dockerfile 与部署脚本。
-38. 配置前端生产构建：
-    - `npm run build`
-    - 环境变量注入
-39. 部署到测试环境并验证完整流程。
-40. 更新 README 与文档，整理 API 说明。
-41. 收集首批用户反馈，迭代 Prompt 与事件库。
+37. 确定上线形态：
+    - 核心形态：响应式 Web PWA（手机/平板/电脑通用）
+    - 架构：前后端分离（B 方案），前端 CDN + 后端容器，长期可扩展性最好
+    - 未来可选：Capacitor/Tauri 包壳成原生 App/桌面端，业务代码基本复用
+38. 前端 PWA 化：
+    - `vite-plugin-pwa` 生成 manifest、Service Worker、离线缓存
+    - 图标、主题色、可安装配置
+39. 编写生产构建与部署配置：
+    - 前端 `npm run build` + `VITE_API_BASE_URL`
+    - 后端 Dockerfile + 健康检查
+    - `docker-compose.yml` + Nginx 全栈一键部署（本地/单机方案）
+40. 部署到测试环境并验证完整流程。
+41. 更新 README 与文档，整理 API 说明。
+42. 收集首批用户反馈，迭代 Prompt 与事件库。
+
+**第九阶段状态：部署架构已完成** ✅（PWA 配置、前后端 Dockerfile、docker-compose、环境变量示例、生产静态服务已落地；`typecheck`/`lint`/`build` 通过；Docker 环境待实际机器验证。）
 
 ## 后续可扩展方向
 

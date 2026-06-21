@@ -6,6 +6,7 @@ import { AttributePanel } from '../components/AttributePanel.js'
 import { EventCard } from '../components/EventCard.js'
 import { EpiphanyPage } from './EpiphanyPage.js'
 import { LifeTimeline } from '../components/LifeTimeline.js'
+import { HelperList } from '../components/HelperList.js'
 import { BreathingOverlay } from '../components/BreathingOverlay.js'
 
 interface Props {
@@ -109,12 +110,14 @@ export function MainGamePage({
           resilience={player.resilience}
         />
 
+        <HelperList helpers={player.helpers} />
+
         {currentEvent && currentEvent.type === 'insight' && (
           <EpiphanyPage event={currentEvent} onSelect={onSelectOption} />
         )}
 
         {currentEvent && currentEvent.type !== 'insight' && (
-          <EventCard event={currentEvent} onSelect={onSelectOption} />
+          <EventCard event={currentEvent} player={player} onSelect={onSelectOption} />
         )}
 
         {!currentEvent && (

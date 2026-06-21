@@ -137,9 +137,14 @@ export const usePlayerStore = create<PlayerStore>()(
           eventTitle: event.title,
           selectedOptionId: option.id,
           selectedOptionText: option.text,
+          selectedOptionType: option.type,
           attributeChanges,
           psychologyHint: event.psychologyHint,
         }
+
+        const nextHelpers = effect.addHelper
+          ? [...player.helpers.filter((h) => h.id !== effect.addHelper!.id), effect.addHelper]
+          : player.helpers
 
         set({
           player: {
@@ -149,6 +154,7 @@ export const usePlayerStore = create<PlayerStore>()(
             resilience: nextResilience,
             emotionTags: nextEmotionTags.slice(0, 3),
             theme: effect.theme || nextTheme,
+            helpers: nextHelpers,
             history: [...player.history, record],
             updatedAt: new Date().toISOString(),
           },

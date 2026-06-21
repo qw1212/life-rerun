@@ -36,9 +36,7 @@ export function detectTheme(player: PlayerState): LifeTheme {
 
   // 3. 历史选择影响
   for (const record of player.history) {
-    // 简化：根据事件 ID 和选择推断选项类型权重
-    // 实际游戏中应在 HistoryRecord 中记录 optionType
-    const optionType = inferOptionType(record.selectedOptionText)
+    const optionType = record.selectedOptionType ?? inferOptionType(record.selectedOptionText)
     const weights = OPTION_TYPE_WEIGHTS[optionType]
     if (weights) {
       for (const [theme, weight] of Object.entries(weights)) {
@@ -89,7 +87,7 @@ export function isOnTheme(player: PlayerState, theme: LifeTheme, threshold = 5):
     if (talent.effect.unlockTheme === theme) scores[theme] += 3
   }
   for (const record of player.history) {
-    const optionType = inferOptionType(record.selectedOptionText)
+    const optionType = record.selectedOptionType ?? inferOptionType(record.selectedOptionText)
     const weights = OPTION_TYPE_WEIGHTS[optionType]
     if (weights && weights[theme]) scores[theme] += weights[theme]
   }

@@ -1,0 +1,30 @@
+# 后端 API 容器
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY apps/server/package.json ./apps/server/
+
+RUN npm ci --workspace=@life-rerun/shared --workspace=@life-rerun/server
+
+COPY packages/shared ./packages/shared
+COPY apps/server ./apps/server
+
+RUN npm run build --workspace=@life-rerun/shared && \
+    npm run build --workspace=@life-rerun/server
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY package*.json ./
+COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /app/apps/server/package.json ./apps/server/package.json
+COPY --from=builder /app/apps/server/dist ./apps/server/dist
+
+RUN npm ci --omit=dev --workspace=@life-rerun/shared --workspace=@life-rerun/server
+
+EXPOSE 3001
+CMD ["node", "apps/server/dist/index.js"]

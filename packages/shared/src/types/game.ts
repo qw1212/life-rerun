@@ -133,6 +133,7 @@ export interface OptionEffect {
   unlockTalent?: string
   addTag?: EmotionTag
   removeTag?: EmotionTag
+  addHelper?: Helper
 }
 
 export interface StoryOption {
@@ -247,6 +248,7 @@ export interface HistoryRecord {
   eventTitle: string
   selectedOptionId: string
   selectedOptionText: string
+  selectedOptionType?: OptionType
   attributeChanges: Partial<Record<AttributeKey, number>>
   psychologyHint: string
   reflection?: string

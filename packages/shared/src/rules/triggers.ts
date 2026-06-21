@@ -1,4 +1,4 @@
-import type { GameEvent, PlayerState } from '../types/game.js'
+import type { GameEvent, PlayerState, StoryOption } from '../types/game.js'
 
 function meetsMinAttributes(
   player: PlayerState,
@@ -67,13 +67,35 @@ export function canTriggerEvent(player: PlayerState, event: GameEvent): boolean 
 }
 
 /**
- * 计算事件触发权重（运气加权）
+ * 计算事件触发权重（运气加权 + 主线匹配加权）
  */
 export function calcEventWeight(player: PlayerState, event: GameEvent): number {
   const baseProbability = event.triggerCondition?.probability ?? 1
   const luckWeight = event.triggerCondition?.luckWeight ?? 0
   const luck = Math.max(0, player.attributes.luck)
-  return baseProbability + (luck / 100) * luckWeight
+  const themeBonus =
+    player.theme !== 'undecided' && event.triggerCondition?.theme === player.theme ? 1.5 : 0
+  return baseProbability + (luck / 100) * luckWeight + themeBonus
+}
+
+/**
+ * 检查隐藏选项是否解锁
+ */
+export function isOptionUnlocked(player: PlayerState, option: StoryOption): boolean {
+  if (!option.hidden) return true
+  const cond = option.unlockCondition
+  if (!cond) return true
+  if (cond.minAttributes) {
+    for (const [key, value] of Object.entries(cond.minAttributes)) {
+      if (value !== undefined && player.attributes[key as keyof PlayerState['attributes']] < value) {
+        return false
+      }
+    }
+  }
+  if (cond.hasTalent && !player.talents.some((t) => t.id === cond.hasTalent)) return false
+  if (cond.hasEvent && !player.history.some((h) => h.eventId === cond.hasEvent)) return false
+  if (cond.minResilience !== undefined && player.resilience < cond.minResilience) return false
+  return true
 }
 
 /**
