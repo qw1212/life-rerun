@@ -10,7 +10,6 @@ import {
   getLifeStage,
   detectTheme,
   drawTalents,
-  getEventById,
 } from '@life-rerun/shared'
 import {
   clamp,
@@ -122,6 +121,7 @@ export const usePlayerStore = create<PlayerStore>()(
               age: player.age,
               eventId: event.id,
               eventTitle: event.title,
+              eventType: event.type,
               selectedOptionId: option.id,
               selectedOptionText: option.text,
               attributeChanges,
@@ -135,6 +135,7 @@ export const usePlayerStore = create<PlayerStore>()(
           age: player.age,
           eventId: event.id,
           eventTitle: event.title,
+          eventType: event.type,
           selectedOptionId: option.id,
           selectedOptionText: option.text,
           selectedOptionType: option.type,
@@ -216,7 +217,7 @@ export const usePlayerStore = create<PlayerStore>()(
       loadSlot: (savedPlayer) => {
         set({
           player: savedPlayer,
-          currentEvent: savedPlayer.history.length > 0 ? getEventById(savedPlayer.history[savedPlayer.history.length - 1].eventId) || null : null,
+          currentEvent: null,
           isGameOver: savedPlayer.age >= 80,
           gratitudeInput: '',
         })

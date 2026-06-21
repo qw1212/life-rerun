@@ -28,18 +28,20 @@ export function BreathingOverlay({ open, onClose }: Props) {
     ]
     let step = 0
     let mounted = true
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
 
     function next() {
       if (!mounted) return
       const current = cycle[step % cycle.length]
       setPhase(current.phase)
       step += 1
-      setTimeout(next, current.duration)
+      timeoutId = setTimeout(next, current.duration)
     }
 
     next()
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
     }
   }, [open])
 

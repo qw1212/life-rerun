@@ -118,10 +118,7 @@ export function pickWeightedEvent(candidates: GameEvent[], weights: number[]): G
 export function needsBreather(player: PlayerState, recentCount = 3): boolean {
   const recent = player.history.slice(-recentCount)
   if (recent.length < recentCount) return false
-  return recent.every((h) => {
-    // 通过 eventId 前缀或历史记录标记判断是否为负面事件
-    return h.eventId.startsWith('event-') && h.psychologyHint.includes('不')
-  })
+  return recent.every((h) => h.eventType === 'low')
 }
 
 /**
@@ -130,5 +127,5 @@ export function needsBreather(player: PlayerState, recentCount = 3): boolean {
 export function needsInsightAfterLow(player: PlayerState): boolean {
   const lastRecord = player.history[player.history.length - 1]
   if (!lastRecord) return false
-  return lastRecord.eventId.includes('-low-') || lastRecord.psychologyHint.includes('不是')
+  return lastRecord.eventType === 'low'
 }

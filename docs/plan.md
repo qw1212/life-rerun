@@ -195,7 +195,15 @@
 41. 更新 README 与文档，整理 API 说明。
 42. 收集首批用户反馈，迭代 Prompt 与事件库。
 
-**第九阶段状态：部署架构已完成** ✅（PWA 配置、前后端 Dockerfile、docker-compose、环境变量示例、生产静态服务已落地；`typecheck`/`lint`/`build` 通过；Docker 环境待实际机器验证。）
+**第九阶段状态：已完成** ✅（PWA 配置、前后端 Dockerfile、docker-compose、Nginx、环境变量示例、生产静态服务、部署脚本 `deploy.sh`/`deploy.ps1`、完整 README 与 `docs/next-steps.md` 已落地；最终 `typecheck`/`lint`/`build` 全部通过；Docker 环境待实际机器验证。）
+
+**最终审查修复**：
+- 修复 `HistoryRecord` 缺少 `eventType` 的问题，所有低谷/成长统计改为基于 `eventType` 准确判断，不再依赖文字匹配。
+- 修复存档加载后错误恢复当前事件的问题。
+- 修复"进入下一年"不清除错误提示的问题。
+- 修复 `vite.config.ts` 引用不存在 `apple-touch-icon.png` 的问题。
+- 新增 `deploy.ps1` Windows 部署脚本。
+- 事件卡片增加无可见选项时的兜底提示。
 
 ## 后续可扩展方向
 

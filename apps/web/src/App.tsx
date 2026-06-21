@@ -99,7 +99,7 @@ function App() {
       if (localEvent) {
         setCurrentEvent(localEvent)
       } else {
-        setError('暂时无法生成新事件，请刷新试试。')
+        setError('暂时无法生成新事件，请点击「进入下一年」重试。')
       }
     } finally {
       setLoading(false)
@@ -114,6 +114,11 @@ function App() {
   function handleCreate(name: string, talents: Talent[], mood: string) {
     createPlayer(name, talents, mood)
     setShowCreation(false)
+  }
+
+  function handleNextYear() {
+    setError('')
+    nextYear()
   }
 
   function handleExport() {
@@ -153,7 +158,7 @@ function App() {
       onSelectOption={handleSelectOption}
       onAddGratitude={addGratitude}
       onSetGratitudeInput={setGratitudeInput}
-      onNextYear={nextYear}
+      onNextYear={handleNextYear}
       onSave={() => saveSlot('auto')}
       onExport={handleExport}
       onReset={handleReset}

@@ -7,7 +7,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['icon.svg'],
+      pwaAssets: { disabled: true },
       manifest: {
         name: '人生模拟器：美好人生叙事之旅',
         short_name: '人生模拟器',

@@ -181,7 +181,7 @@ export function MainGamePage({
                   </button>
                 </div>
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
               </div>
             )}
           </motion.section>

@@ -58,33 +58,37 @@ export function EventCard({ event, player, onSelect }: Props) {
       <p className="text-stone-700 leading-relaxed text-base sm:text-lg mb-8">{event.story}</p>
 
       <div className="space-y-3">
-        {visibleOptions.map((option, index) => (
-          <motion.button
-            key={option.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.08 }}
-            onClick={() => onSelect(option)}
-            className="group w-full text-left px-5 py-4 rounded-xl border border-warm-200 hover:border-hope-400 hover:bg-hope-50 transition-all"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="font-medium text-stone-800 group-hover:text-hope-800 transition-colors">
-                  {option.text}
-                </div>
-                {option.preview && (
-                  <div className="text-xs text-stone-500 mt-1 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    {option.preview}
+        {visibleOptions.length === 0 ? (
+          <p className="text-sm text-stone-500">当前没有可选择的选项，请刷新页面重试。</p>
+        ) : (
+          visibleOptions.map((option, index) => (
+            <motion.button
+              key={option.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.08 }}
+              onClick={() => onSelect(option)}
+              className="group w-full text-left px-5 py-4 rounded-xl border border-warm-200 hover:border-hope-400 hover:bg-hope-50 transition-all"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-stone-800 group-hover:text-hope-800 transition-colors">
+                    {option.text}
                   </div>
-                )}
+                  {option.preview && (
+                    <div className="text-xs text-stone-500 mt-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      {option.preview}
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 capitalize ml-3 shrink-0">
+                  {OPTION_TYPE_LABEL[option.type]}
+                </div>
               </div>
-              <div className="text-xs text-stone-400 capitalize ml-3 shrink-0">
-                {OPTION_TYPE_LABEL[option.type]}
-              </div>
-            </div>
-          </motion.button>
-        ))}
+            </motion.button>
+          ))
+        )}
 
         {event.options.some((option) => option.hidden) && (
           <div className="flex items-center gap-1.5 text-xs text-stone-400 pt-1">

@@ -5,8 +5,8 @@
   "description": "人生模拟器：美好人生叙事之旅",
   "type": "module",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present",

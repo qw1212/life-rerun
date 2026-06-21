@@ -50,8 +50,8 @@ function generateEndingTitle(player: PlayerState): string {
 }
 
 function generateSummary(player: PlayerState): string {
-  const lowCount = player.history.filter((h) => h.psychologyHint.includes('不')).length
-  const growthCount = player.history.filter((h) => h.psychologyHint.includes('成长')).length
+  const lowCount = player.history.filter((h) => h.eventType === 'low').length
+  const growthCount = player.history.filter((h) => h.selectedOptionType === 'growth').length
   return `${player.name} 走过了 ${player.age} 年的人生，经历过 ${player.history.length} 个重要时刻。${
     lowCount > 0
       ? `其中有 ${lowCount} 段低谷，但每一次都成为了成长的入口。`

@@ -246,6 +246,7 @@ export interface HistoryRecord {
   age: number
   eventId: string
   eventTitle: string
+  eventType: EventType
   selectedOptionId: string
   selectedOptionText: string
   selectedOptionType?: OptionType

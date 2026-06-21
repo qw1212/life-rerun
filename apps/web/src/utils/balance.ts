@@ -34,12 +34,12 @@ export function clampPerma(perma: Perma): Perma {
 
 /**
  * 心理韧性恢复公式
- * 基础恢复 + 韧性属性加成 - 连续负面事件惩罚
+ * 基础恢复 + 韧性属性加成 - 连续低谷事件惩罚
  */
 export function calcResilienceRecovery(player: PlayerState): number {
   const baseRecovery = 2
   const resilienceAttrBonus = player.attributes.resilience / 50 // 0~2
-  const recentLowEvents = player.history.slice(-3).filter((h) => h.psychologyHint.includes('不')).length
+  const recentLowEvents = player.history.slice(-3).filter((h) => h.eventType === 'low').length
   const penalty = recentLowEvents * 1.5
   return clamp(baseRecovery + resilienceAttrBonus - penalty, -3, 5)
 }
