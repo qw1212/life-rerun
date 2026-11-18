@@ -1,8 +1,11 @@
-import type { NarrativeResponse, PlayerState } from '@life-rerun/shared'
+import type { AssessmentResult, NarrativeResponse, PlayerState } from '@life-rerun/shared'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 
-export async function generateNarrative(player: PlayerState): Promise<NarrativeResponse> {
+export async function generateNarrative(
+  player: PlayerState,
+  assessments?: AssessmentResult[]
+): Promise<NarrativeResponse> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 20000)
 
@@ -10,7 +13,7 @@ export async function generateNarrative(player: PlayerState): Promise<NarrativeR
     const response = await fetch(`${API_BASE}/narrative`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(player),
+      body: JSON.stringify({ ...player, assessments }),
       signal: controller.signal,
     })
 

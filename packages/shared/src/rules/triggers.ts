@@ -122,6 +122,18 @@ export function needsBreather(player: PlayerState, recentCount = 3): boolean {
 }
 
 /**
+ * 统计玩家最近连续的低谷事件数（从最新一条往前数）。
+ */
+export function countRecentLowStreak(player: PlayerState): number {
+  let streak = 0
+  for (let i = player.history.length - 1; i >= 0; i -= 1) {
+    if (player.history[i].eventType === 'low') streak += 1
+    else break
+  }
+  return streak
+}
+
+/**
  * 检查是否需要触发低谷后的顿悟事件
  */
 export function needsInsightAfterLow(player: PlayerState): boolean {

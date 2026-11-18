@@ -1,12 +1,22 @@
 import { Router } from 'express'
 import { generateNarrative } from '../services/ai/index.js'
-import { getLifeStage, type PlayerState } from '@life-rerun/shared'
+import {
+  getLifeStage,
+  assessRisk,
+  extractAssessmentSignals,
+  countRecentLowStreak,
+  type AssessmentResult,
+  type PlayerState,
+  type RiskSignals,
+} from '@life-rerun/shared'
 
 const router = Router()
 
 router.post('/', async (req, res) => {
   try {
-    const partial = req.body as Partial<PlayerState>
+    const body = req.body as Partial<PlayerState> & { assessments?: AssessmentResult[] }
+    const assessments = body.assessments
+    const partial = body
 
     if (!partial.name || partial.age === undefined) {
       res.status(400).json({ error: '缺少必要的玩家状态字段' })
@@ -44,8 +54,22 @@ router.post('/', async (req, res) => {
       updatedAt: new Date().toISOString(),
     }
 
+    // 危机分级：综合自由文本、量表结果与近期低谷密度
+    const signals: RiskSignals = {
+      freeText: player.gratitudeLog,
+      recentLowStreak: countRecentLowStreak(player),
+      ...extractAssessmentSignals(assessments),
+    }
+    const risk = assessRisk(signals)
+
+    // 高风险：硬中断叙事，不调用 AI，交由客户端展示危机支持界面
+    if (risk.blockNarrative) {
+      res.json({ story: '', options: [], psychologyHint: '', risk, blocked: true })
+      return
+    }
+
     const response = await generateNarrative(player)
-    res.json(response)
+    res.json({ ...response, risk })
   } catch (error) {
     console.error('Narrative error:', error)
     res.status(500).json({ error: '生成叙事失败' })

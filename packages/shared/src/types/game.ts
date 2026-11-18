@@ -1,3 +1,5 @@
+import type { RiskAssessment } from './assessment.js'
+
 /**
  * 玩家六维属性
  */
@@ -269,6 +271,10 @@ export interface NarrativeResponse {
   psychologyHint: string
   attributeChanges?: Partial<Record<AttributeKey, number>>
   permaChanges?: Partial<Perma>
+  /** 本次请求的风险分级结果 */
+  risk?: RiskAssessment
+  /** 是否因高风险而中断叙事（此时 story 与 options 为空） */
+  blocked?: boolean
 }
 
 /**

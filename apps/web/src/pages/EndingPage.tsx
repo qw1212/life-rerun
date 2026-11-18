@@ -1,12 +1,19 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import type { PlayerState, Perma } from '@life-rerun/shared'
-import { BookOpen, RotateCcw, Download, Heart } from 'lucide-react'
+import {
+  getAssessmentScale,
+  type AssessmentResult,
+  type PlayerState,
+  type Perma,
+} from '@life-rerun/shared'
+import { BookOpen, RotateCcw, Download, Heart, ClipboardList } from 'lucide-react'
 
 interface Props {
   player: PlayerState
+  assessments: AssessmentResult[]
   onExport: () => void
   onReset: () => void
+  onStartPostAssessment: () => void
 }
 
 const PERMA_LABELS: Record<keyof Perma, string> = {
@@ -160,9 +167,70 @@ function RadarChart({ perma }: { perma: Perma }) {
   )
 }
 
-export function EndingPage({ player, onExport, onReset }: Props) {
+function AssessmentComparison({ assessments }: { assessments: AssessmentResult[] }) {
+  const rows = useMemo(() => {
+    const ids = Array.from(new Set(assessments.map((a) => a.scale)))
+    return ids
+      .map((id) => ({
+        meta: getAssessmentScale(id),
+        pre: assessments.find((a) => a.scale === id && a.phase === 'pre'),
+        post: assessments.find((a) => a.scale === id && a.phase === 'post'),
+      }))
+      .filter((row): row is { meta: ReturnType<typeof getAssessmentScale>; pre: AssessmentResult; post: AssessmentResult } =>
+        Boolean(row.pre && row.post)
+      )
+  }, [assessments])
+
+  if (rows.length === 0) return null
+
+  return (
+    <div className="space-y-3">
+      {rows.map((row) => {
+        const delta = row.post.totalScore - row.pre.totalScore
+        return (
+          <div key={row.meta.id} className="rounded-xl border border-stone-200 p-4 space-y-2">
+            <div className="flex items-baseline justify-between">
+              <span className="font-medium text-stone-800">{row.meta.name}</span>
+              <span
+                className={`text-sm font-medium ${
+                  delta < 0 ? 'text-hope-600' : delta > 0 ? 'text-warm-700' : 'text-stone-500'
+                }`}
+              >
+                {delta > 0 ? `+${delta}` : delta}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="text-stone-600">
+                前测：<span className="text-stone-800 font-medium">{row.pre.totalScore}</span> 分
+                <span className="block text-xs text-stone-500 mt-0.5">{row.pre.severityLabel}</span>
+              </div>
+              <div className="text-stone-600">
+                后测：<span className="text-stone-800 font-medium">{row.post.totalScore}</span> 分
+                <span className="block text-xs text-stone-500 mt-0.5">{row.post.severityLabel}</span>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+      <p className="text-xs text-stone-400 leading-relaxed">
+        分数变化会受很多因素影响（当天状态、作答时间点、对题目的理解等），
+        它只反映你两次自评的差异，不能用来证明本产品具有任何疗效。
+        若分数落在中度及以上区间，建议寻求专业评估。
+      </p>
+    </div>
+  )
+}
+
+export function EndingPage({
+  player,
+  assessments,
+  onExport,
+  onReset,
+  onStartPostAssessment,
+}: Props) {
   const [keptQuality, setKeptQuality] = useState<string | null>(null)
   const qualityOptions = useMemo(() => getKeptQualityOptions(player), [player])
+  const hasPostAssessment = assessments.some((a) => a.phase === 'post')
 
   return (
     <main className="min-h-screen p-4 sm:p-6 bg-warm-50">
@@ -211,6 +279,34 @@ export function EndingPage({ player, onExport, onReset }: Props) {
             心理成长报告
           </h2>
           <p className="text-stone-700 leading-relaxed">{generateGrowthReport(player)}</p>
+        </motion.section>
+
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-white rounded-2xl p-6 shadow-sm space-y-4"
+        >
+          <h2 className="text-lg font-bold text-warm-800 flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-hope-500" />
+            情绪自评对照
+          </h2>
+          {hasPostAssessment ? (
+            <AssessmentComparison assessments={assessments} />
+          ) : (
+            <>
+              <p className="text-sm text-stone-600 leading-relaxed">
+                再花两分钟填写一次开始时的两份问卷，可以看到自己在这段旅程前后的自评差异。
+                这不是疗效证明，只是一次自我对照。
+              </p>
+              <button
+                onClick={onStartPostAssessment}
+                className="px-5 py-2.5 bg-white hover:bg-stone-50 text-stone-700 border border-stone-300 rounded-xl text-sm font-medium transition-colors"
+              >
+                填写结束评估
+              </button>
+            </>
+          )}
         </motion.section>
 
         <motion.section

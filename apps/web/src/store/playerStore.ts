@@ -7,6 +7,8 @@ import {
   type GameEvent,
   type Talent,
   type EmotionTag,
+  type AssessmentResult,
+  type RiskAssessment,
   getLifeStage,
   detectTheme,
   drawTalents,
@@ -28,6 +30,12 @@ interface PlayerStore {
   gratitudeInput: string
   isGameOver: boolean
 
+  // 心理评估与危机干预
+  assessments: AssessmentResult[]
+  acknowledgedRiskSignature: string | null
+  submitAssessment: (result: AssessmentResult) => void
+  acknowledgeCrisis: (risk: RiskAssessment) => void
+
   // 角色创建
   createPlayer: (name: string, selectedTalents?: Talent[], initialMood?: string) => void
 
@@ -46,6 +54,14 @@ interface PlayerStore {
 }
 
 const STORAGE_KEY = 'life-rerun-player'
+
+/**
+ * 风险依据签名：用于判断「用户是否已阅读过当前这组风险提示」。
+ */
+export function getRiskSignature(risk: RiskAssessment | null): string | null {
+  if (!risk || risk.reasons.length === 0) return null
+  return risk.reasons.join('|')
+}
 
 function createInitialPlayer(name: string, talents: Talent[], initialMood?: string): PlayerState {
   const now = new Date().toISOString()
@@ -76,6 +92,19 @@ export const usePlayerStore = create<PlayerStore>()(
       currentEvent: null,
       gratitudeInput: '',
       isGameOver: false,
+      assessments: [],
+      acknowledgedRiskSignature: null,
+
+      submitAssessment: (result) => {
+        const { assessments } = get()
+        const others = assessments.filter(
+          (a) => !(a.scale === result.scale && a.phase === result.phase)
+        )
+        set({ assessments: [...others, result] })
+      },
+
+      acknowledgeCrisis: (risk) =>
+        set({ acknowledgedRiskSignature: getRiskSignature(risk) }),
 
       createPlayer: (name, selectedTalents, initialMood) => {
         const talents = selectedTalents && selectedTalents.length > 0 ? selectedTalents : drawTalents(3)
@@ -230,13 +259,20 @@ export const usePlayerStore = create<PlayerStore>()(
       },
 
       resetGame: () => {
-        set({ player: null, currentEvent: null, isGameOver: false, gratitudeInput: '' })
+        set({
+          player: null,
+          currentEvent: null,
+          isGameOver: false,
+          gratitudeInput: '',
+          assessments: [],
+          acknowledgedRiskSignature: null,
+        })
         localStorage.removeItem(STORAGE_KEY)
       },
     }),
     {
       name: STORAGE_KEY,
-      partialize: (state) => ({ player: state.player }),
+      partialize: (state) => ({ player: state.player, assessments: state.assessments }),
     }
   )
 )

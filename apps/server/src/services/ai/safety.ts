@@ -1,24 +1,19 @@
-const BLOCKED_KEYWORDS = [
-  '自杀',
-  '自残',
-  '自伤',
-  '跳楼',
-  '割腕',
-  '杀人',
+import { detectTextRiskLevel, type RiskLevel } from '@life-rerun/shared'
+
+/**
+ * 内容审核词表：与心理风险无关，但不应出现在生成内容中。
+ */
+const BLOCKED_CONTENT_KEYWORDS = [
   '暴力',
   '虐待',
   '强奸',
   '色情',
   '种族歧视',
   '性别歧视',
-  '去死',
-  '活着没意思',
 ]
 
-const LOW_MOOD_KEYWORDS = ['失落', '绝望', '崩溃', '痛苦', '孤独', '焦虑', '抑郁']
-
 export const SUPPORT_MESSAGE =
-  '如果你正在经历严重的心理困扰，请寻求专业帮助。中国心理危机干预热线：400-161-9995（24小时）。你并不孤单。'
+  '如果你正在经历严重的心理困扰，请寻求专业帮助。全国统一心理援助热线：12356；紧急情况请拨打 120。你并不孤单。'
 
 export interface SafetyCheckResult {
   safe: boolean
@@ -26,34 +21,45 @@ export interface SafetyCheckResult {
   needsSupport: boolean
 }
 
-export function checkInputSafety(text: string): SafetyCheckResult {
-  const lower = text.toLowerCase()
-  const found = BLOCKED_KEYWORDS.find((k) => lower.includes(k.toLowerCase()))
-  if (found) {
-    return {
-      safe: false,
-      reason: `输入包含敏感内容：${found}`,
-      needsSupport: true,
-    }
+function toResult(level: RiskLevel, matched: string[]): SafetyCheckResult {
+  return {
+    safe: level !== 'high',
+    reason: matched.length > 0 ? `命中风险信号：${matched.join('、')}` : undefined,
+    needsSupport: level !== 'none',
   }
-  const needsSupport = LOW_MOOD_KEYWORDS.some((k) => lower.includes(k.toLowerCase()))
-  return { safe: true, needsSupport }
 }
 
-export function checkOutputSafety(content: string): SafetyCheckResult {
-  const lower = content.toLowerCase()
-  const blocked = BLOCKED_KEYWORDS.find((k) => lower.includes(k.toLowerCase()))
+function findBlockedContent(text: string): string | undefined {
+  const lower = text.toLowerCase()
+  return BLOCKED_CONTENT_KEYWORDS.find((k) => lower.includes(k.toLowerCase()))
+}
+
+/**
+ * 输入安全检查：基于分层风险筛查 + 内容词表。
+ */
+export function checkInputSafety(text: string): SafetyCheckResult {
+  const blocked = findBlockedContent(text)
   if (blocked) {
-    return {
-      safe: false,
-      reason: `输出包含敏感内容：${blocked}`,
-      needsSupport: true,
-    }
+    return { safe: false, reason: `输入包含不适宜内容：${blocked}`, needsSupport: true }
   }
-  const needsSupport = LOW_MOOD_KEYWORDS.some((k) => lower.includes(k.toLowerCase()))
-  return { safe: true, needsSupport }
+  const { level, matched } = detectTextRiskLevel([text])
+  return toResult(level, matched)
+}
+
+/**
+ * 输出安全检查：基于分层风险筛查 + 内容词表。
+ */
+export function checkOutputSafety(content: string): SafetyCheckResult {
+  const blocked = findBlockedContent(content)
+  if (blocked) {
+    return { safe: false, reason: `输出包含不适宜内容：${blocked}`, needsSupport: true }
+  }
+  const { level, matched } = detectTextRiskLevel([content])
+  return toResult(level, matched)
 }
 
 export function sanitizeStory(story: string): string {
   return story.replace(/<[^>]*>/g, '').trim()
 }
+
+export { detectTextRiskLevel }

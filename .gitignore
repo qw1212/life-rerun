@@ -38,4 +38,9 @@ pnpm-debug.log*
 # Database
 *.sqlite
 *.sqlite3
-data/
+# 运行时数据目录只忽略仓库根下的 /data/。
+# 不要写裸 `data/`：git 会按「任意层级同名目录」匹配，
+# 把 packages/shared/src/data/ 这类**源码目录**一起忽略，
+# 结果是 events.ts / talents.ts / assessments.ts 从来没进过仓库，
+# 别人 clone 下来直接构建失败。
+/data/
