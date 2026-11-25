@@ -1,115 +1,160 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import {
+  ATTRIBUTE_META,
+  PERMA_META,
   getAssessmentScale,
   type AssessmentResult,
-  type PlayerState,
+  type AttributeKey,
   type Perma,
+  type PlayerState,
 } from '@life-rerun/shared'
-import { BookOpen, RotateCcw, Download, Heart, ClipboardList } from 'lucide-react'
+import { BookOpen, ClipboardList, Download, Heart, RotateCcw } from 'lucide-react'
+import { LifeTimeline } from '../components/LifeTimeline.js'
 
 interface Props {
   player: PlayerState
   assessments: AssessmentResult[]
+  keptQuality: string | null
+  onSelectQuality: (quality: string) => void
   onExport: () => void
   onReset: () => void
   onStartPostAssessment: () => void
 }
 
-const PERMA_LABELS: Record<keyof Perma, string> = {
-  positive: '积极情绪',
-  engagement: '投入',
-  relationships: '关系',
-  meaning: '意义',
-  achievement: '成就',
-}
+const PERMA_KEYS = Object.keys(PERMA_META) as (keyof Perma)[]
 
-const ATTRIBUTE_LABELS: Record<string, string> = {
-  intelligence: '智慧',
-  physique: '健康',
-  charm: '善意',
-  wealth: '丰盈',
-  luck: '勇气',
-  resilience: '韧性',
+function topPerma(player: PlayerState): keyof Perma {
+  return PERMA_KEYS.reduce((best, key) =>
+    player.perma[key] > player.perma[best] ? key : best
+  )
 }
 
 function getKeptQualityOptions(player: PlayerState): string[] {
-  const entries = Object.entries(player.attributes)
-    .filter(([key]) => key !== 'wealth' && key !== 'luck')
-    .sort((a, b) => b[1] - a[1])
+  const attributeOptions = (Object.keys(ATTRIBUTE_META) as AttributeKey[])
+    .filter((key) => key !== 'wealth' && key !== 'luck')
+    .sort((a, b) => player.attributes[b] - player.attributes[a])
     .slice(0, 2)
-    .map(([key]) => ATTRIBUTE_LABELS[key] || key)
-  const permaEntries = Object.entries(player.perma)
-    .sort((a, b) => b[1] - a[1])
+    .map((key) => ATTRIBUTE_META[key].label)
+
+  const permaOptions = [...PERMA_KEYS]
+    .sort((a, b) => player.perma[b] - player.perma[a])
     .slice(0, 2)
-    .map(([key]) => PERMA_LABELS[key as keyof Perma])
-  return Array.from(new Set([...entries, ...permaEntries, '爱', '希望']))
+    .map((key) => PERMA_META[key].label)
+
+  return Array.from(new Set([...permaOptions, ...attributeOptions, '爱', '希望', '勇气']))
 }
 
 function generateEndingTitle(player: PlayerState): string {
-  const { theme } = player
-  if (theme === 'academic') return '求知的守望者'
-  if (theme === 'startup') return '创造价值的旅人'
-  if (theme === 'art') return '用心感光的艺术家'
-  if (theme === 'social') return '点亮他人的火炬手'
-  if (theme === 'ordinary') return '平凡日子的收藏家'
-  return '独一无二的人生书写者'
+  const themeTitles: Record<PlayerState['theme'], string> = {
+    academic: '求知的守望者',
+    startup: '创造价值的旅人',
+    art: '用心感光的艺术家',
+    social: '点亮他人的火炬手',
+    ordinary: '平凡日子的收藏家',
+    undecided: '独一无二的人生书写者',
+  }
+  if (player.theme !== 'undecided') return themeTitles[player.theme]
+
+  const permaTitles: Record<keyof Perma, string> = {
+    positive: '温柔的感受者',
+    engagement: '沉浸的专注者',
+    relationships: '彼此照亮的人',
+    meaning: '寻找意义的行者',
+    achievement: '踏实的前行者',
+  }
+  return permaTitles[topPerma(player)]
 }
 
 function generateSummary(player: PlayerState): string {
-  const lowCount = player.history.filter((h) => h.eventType === 'low').length
-  const growthCount = player.history.filter((h) => h.selectedOptionType === 'growth').length
-  return `${player.name} 走过了 ${player.age} 年的人生，经历过 ${player.history.length} 个重要时刻。${
-    lowCount > 0
-      ? `其中有 ${lowCount} 段低谷，但每一次都成为了成长的入口。`
-      : '这一路平稳而温暖，积累了足够的内在力量。'
-  }${growthCount > 0 ? `你做出了 ${growthCount} 次指向成长的选择，这些选择定义了你是谁。` : ''}`
+  const lowCount = player.history.filter((record) => record.eventType === 'low').length
+  const growthCount = player.history.filter(
+    (record) => record.selectedOptionType === 'growth'
+  ).length
+  const relationshipCount = player.history.filter(
+    (record) => record.selectedOptionType === 'relationship'
+  ).length
+
+  const parts = [
+    `${player.name} 走过了 ${player.age} 年的人生，留下了 ${player.history.length} 个重要时刻。`,
+  ]
+
+  if (lowCount > 0) {
+    parts.push(`其中有 ${lowCount} 段低谷，但每一次都成为了重新理解自己的入口。`)
+  } else {
+    parts.push('这一路平稳而温暖，你积累了足够的内在力量。')
+  }
+
+  if (growthCount > 0) {
+    parts.push(`你做出了 ${growthCount} 次指向成长的选择，这些选择一点点塑造了你是谁。`)
+  }
+  if (relationshipCount > 0) {
+    parts.push(`你也有 ${relationshipCount} 次把身边的人放在前面，关系因此有了重量。`)
+  }
+  if (player.helpers.length > 0) {
+    parts.push(
+      `一路上，${player.helpers.map((helper) => helper.name).join('、')} 曾与你同行。`
+    )
+  }
+  if (player.gratitudeLog.length > 0) {
+    parts.push(`你记下了 ${player.gratitudeLog.length} 件微小而具体的美好。`)
+  }
+
+  return parts.join('')
 }
 
 function generateGrowthReport(player: PlayerState): string {
   const resilience = player.resilience
-  if (resilience >= 80) return '你的心理韧性令人钦佩，已经能够把挑战转化为资源。'
-  if (resilience >= 60) return '你拥有不错的心理韧性，未来也能继续稳步成长。'
-  if (resilience >= 40) return '你正在学习照顾自己，允许自己慢慢来。'
-  return '请记得，人生价值从不取决于属性数值，你依然值得被温柔以待。'
+  const top = PERMA_META[topPerma(player)]
+
+  const base =
+    resilience >= 80
+      ? '你的心理韧性令人钦佩，已经能够把挑战转化为资源。'
+      : resilience >= 60
+        ? '你拥有不错的心理韧性，未来也能继续稳步成长。'
+        : resilience >= 40
+          ? '你正在学习照顾自己，允许自己慢慢来。'
+          : '请记得，人生价值从不取决于属性数值，你依然值得被温柔以待。'
+
+  return `${base}这一生里，你最容易获得力量的地方是「${top.label}」——${top.description}。`
 }
 
 function generateAchievement(player: PlayerState): string {
-  const maxAttr = Object.entries(player.attributes).sort((a, b) => b[1] - a[1])[0]
-  const maxPerma = Object.entries(player.perma).sort((a, b) => b[1] - a[1])[0]
-  return `最高属性：${ATTRIBUTE_LABELS[maxAttr[0]] || maxAttr[0]} ${maxAttr[1]}；最突出的 PERMA 维度：${
-    PERMA_LABELS[maxPerma[0] as keyof Perma]
-  } ${maxPerma[1]}。`
+  const maxAttribute = (Object.keys(ATTRIBUTE_META) as AttributeKey[]).sort(
+    (a, b) => player.attributes[b] - player.attributes[a]
+  )[0]
+  const top = topPerma(player)
+  return `最突出的品质：${ATTRIBUTE_META[maxAttribute].label} ${player.attributes[maxAttribute]}；最充盈的 PERMA 维度：${PERMA_META[top].label} ${player.perma[top]}。`
 }
 
 function RadarChart({ perma }: { perma: Perma }) {
-  const keys = Object.keys(perma) as (keyof Perma)[]
+  const keys = PERMA_KEYS
   const count = keys.length
   const radius = 70
   const center = 90
-  const angleFor = (i: number) => (Math.PI * 2 * i) / count - Math.PI / 2
+  const angleFor = (index: number) => (Math.PI * 2 * index) / count - Math.PI / 2
 
   const gridLevels = [0.2, 0.4, 0.6, 0.8, 1]
-  const points = keys.map((key, i) => {
+  const points = keys.map((key, index) => {
     const value = perma[key] / 100
-    const angle = angleFor(i)
+    const angle = angleFor(index)
     return {
       x: center + radius * value * Math.cos(angle),
       y: center + radius * value * Math.sin(angle),
       labelX: center + (radius + 24) * Math.cos(angle),
       labelY: center + (radius + 24) * Math.sin(angle),
-      label: PERMA_LABELS[key],
+      label: PERMA_META[key].label,
       value: perma[key],
     }
   })
 
   return (
-    <svg viewBox="0 0 180 180" className="w-full max-w-[240px] mx-auto">
+    <svg viewBox="0 0 180 180" className="w-full max-w-[240px] mx-auto" role="img" aria-label="PERMA 五维雷达图">
       {gridLevels.map((level) => {
         const r = radius * level
         const polygonPoints = keys
-          .map((_, i) => {
-            const angle = angleFor(i)
+          .map((_, index) => {
+            const angle = angleFor(index)
             return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`
           })
           .join(' ')
@@ -123,43 +168,43 @@ function RadarChart({ perma }: { perma: Perma }) {
           />
         )
       })}
-      {points.map((p, i) => (
+      {points.map((point, index) => (
         <line
-          key={i}
+          key={index}
           x1={center}
           y1={center}
-          x2={p.labelX}
-          y2={p.labelY}
+          x2={point.labelX}
+          y2={point.labelY}
           stroke="#e7e5e4"
           strokeWidth="1"
         />
       ))}
       <polygon
-        points={points.map((p) => `${p.x},${p.y}`).join(' ')}
+        points={points.map((point) => `${point.x},${point.y}`).join(' ')}
         fill="rgba(34, 197, 94, 0.2)"
         stroke="#22c55e"
         strokeWidth="2"
       />
-      {points.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="3" fill="#22c55e" />
+      {points.map((point, index) => (
+        <g key={index}>
+          <circle cx={point.x} cy={point.y} r="3" fill="#22c55e" />
           <text
-            x={p.labelX}
-            y={p.labelY}
+            x={point.labelX}
+            y={point.labelY}
             textAnchor="middle"
             dominantBaseline="middle"
             className="text-[10px] fill-stone-600"
           >
-            {p.label}
+            {point.label}
           </text>
           <text
-            x={p.labelX}
-            y={p.labelY + 12}
+            x={point.labelX}
+            y={point.labelY + 12}
             textAnchor="middle"
             dominantBaseline="middle"
             className="text-[9px] fill-stone-400"
           >
-            {p.value}
+            {point.value}
           </text>
         </g>
       ))}
@@ -167,21 +212,30 @@ function RadarChart({ perma }: { perma: Perma }) {
   )
 }
 
+type AssessmentRow = {
+  meta: ReturnType<typeof getAssessmentScale>
+  pre: AssessmentResult
+  post: AssessmentResult
+}
+
 function AssessmentComparison({ assessments }: { assessments: AssessmentResult[] }) {
-  const rows = useMemo(() => {
-    const ids = Array.from(new Set(assessments.map((a) => a.scale)))
-    return ids
-      .map((id) => ({
-        meta: getAssessmentScale(id),
-        pre: assessments.find((a) => a.scale === id && a.phase === 'pre'),
-        post: assessments.find((a) => a.scale === id && a.phase === 'post'),
-      }))
-      .filter((row): row is { meta: ReturnType<typeof getAssessmentScale>; pre: AssessmentResult; post: AssessmentResult } =>
-        Boolean(row.pre && row.post)
-      )
+  const rows = useMemo<AssessmentRow[]>(() => {
+    const ids = Array.from(new Set(assessments.map((result) => result.scale)))
+    return ids.flatMap((id) => {
+      const pre = assessments.find((result) => result.scale === id && result.phase === 'pre')
+      const post = assessments.find((result) => result.scale === id && result.phase === 'post')
+      if (!pre || !post) return []
+      return [{ meta: getAssessmentScale(id), pre, post }]
+    })
   }, [assessments])
 
-  if (rows.length === 0) return null
+  if (rows.length === 0) {
+    return (
+      <p className="text-sm text-stone-600 leading-relaxed">
+        只有同一份问卷的前测与后测都完成时才能对照。你可以重新填写结束评估，或者把这次自评当作一次独立的自我观察。
+      </p>
+    )
+  }
 
   return (
     <div className="space-y-3">
@@ -213,9 +267,8 @@ function AssessmentComparison({ assessments }: { assessments: AssessmentResult[]
         )
       })}
       <p className="text-xs text-stone-400 leading-relaxed">
-        分数变化会受很多因素影响（当天状态、作答时间点、对题目的理解等），
-        它只反映你两次自评的差异，不能用来证明本产品具有任何疗效。
-        若分数落在中度及以上区间，建议寻求专业评估。
+        分数变化会受很多因素影响（当天状态、作答时间点、对题目的理解等），它只反映你两次自评的差异，
+        不能用来证明本产品具有任何疗效。若分数落在中度及以上区间，建议寻求专业评估。
       </p>
     </div>
   )
@@ -224,13 +277,14 @@ function AssessmentComparison({ assessments }: { assessments: AssessmentResult[]
 export function EndingPage({
   player,
   assessments,
+  keptQuality,
+  onSelectQuality,
   onExport,
   onReset,
   onStartPostAssessment,
 }: Props) {
-  const [keptQuality, setKeptQuality] = useState<string | null>(null)
   const qualityOptions = useMemo(() => getKeptQualityOptions(player), [player])
-  const hasPostAssessment = assessments.some((a) => a.phase === 'post')
+  const hasPostAssessment = assessments.some((result) => result.phase === 'post')
 
   return (
     <main className="min-h-screen p-4 sm:p-6 bg-warm-50">
@@ -243,7 +297,9 @@ export function EndingPage({
           <div className="flex justify-center">
             <BookOpen className="w-12 h-12 text-hope-500" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-warm-800">{generateEndingTitle(player)}</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-warm-800">
+            {generateEndingTitle(player)}
+          </h1>
           <p className="text-stone-600">{player.name} 的人生之书已写完</p>
         </motion.div>
 
@@ -292,7 +348,15 @@ export function EndingPage({
             情绪自评对照
           </h2>
           {hasPostAssessment ? (
-            <AssessmentComparison assessments={assessments} />
+            <>
+              <AssessmentComparison assessments={assessments} />
+              <button
+                onClick={onStartPostAssessment}
+                className="text-xs text-stone-500 hover:text-stone-700 underline"
+              >
+                重新填写结束评估
+              </button>
+            </>
           ) : (
             <>
               <p className="text-sm text-stone-600 leading-relaxed">
@@ -319,11 +383,12 @@ export function EndingPage({
           <p className="text-sm text-stone-600">
             叙事疗法说：我们可以选择让哪些品质继续定义自己。请选择一个你最想带走的力量。
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="选择想保留的品质">
             {qualityOptions.map((quality) => (
               <button
                 key={quality}
-                onClick={() => setKeptQuality(quality)}
+                onClick={() => onSelectQuality(quality)}
+                aria-pressed={keptQuality === quality}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   keptQuality === quality
                     ? 'bg-hope-500 text-white'
@@ -345,11 +410,21 @@ export function EndingPage({
           )}
         </motion.section>
 
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="space-y-3"
+        >
+          <h2 className="text-lg font-bold text-warm-800 px-1">人生之书</h2>
+          <LifeTimeline player={player} initialCount={8} />
+        </motion.section>
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="flex flex-col sm:flex-row gap-3 justify-center"
+          className="flex flex-col sm:flex-row gap-3 justify-center pb-6"
         >
           <button
             onClick={onExport}

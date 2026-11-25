@@ -15,6 +15,8 @@ interface Props {
   phase: AssessmentPhase
   scales: AssessmentScaleId[]
   onComplete: (results: AssessmentResult[]) => void
+  /** 问卷完全自愿，必须允许跳过；不传则不显示跳过入口 */
+  onSkip?: () => void
 }
 
 const PHASE_COPY: Record<AssessmentPhase, { title: string; subtitle: string }> = {
@@ -28,8 +30,9 @@ const PHASE_COPY: Record<AssessmentPhase, { title: string; subtitle: string }> =
   },
 }
 
-export function AssessmentPage({ phase, scales, onComplete }: Props) {
-  const [consented, setConsented] = useState(false)
+export function AssessmentPage({ phase, scales, onComplete, onSkip }: Props) {
+  // 前测需要阅读知情同意；后测是玩家自己点进来的重复填写，不再重复拦截
+  const [consented, setConsented] = useState(phase !== 'pre')
   const [scaleIndex, setScaleIndex] = useState(0)
   const [current, setCurrent] = useState<number[]>([])
   const [collected, setCollected] = useState<AssessmentResult[]>([])
@@ -110,6 +113,14 @@ export function AssessmentPage({ phase, scales, onComplete }: Props) {
           >
             我已阅读并理解，开始填写
           </button>
+          {onSkip && (
+            <button
+              onClick={onSkip}
+              className="w-full px-6 py-2.5 text-sm text-stone-500 hover:text-stone-700 transition-colors"
+            >
+              暂不填写，直接开始
+            </button>
+          )}
         </motion.div>
       </main>
     )
@@ -123,13 +134,23 @@ export function AssessmentPage({ phase, scales, onComplete }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl p-5 shadow-sm space-y-2"
         >
-          <div className="flex items-center gap-2 text-hope-600 text-sm font-medium">
-            <ClipboardList className="w-4 h-4" />
-            {phase === 'pre' ? '开始前的自我了解' : '结束后的自我对照'}
-            {scales.length > 1 && (
-              <span className="text-stone-400 font-normal">
-                （第 {scaleIndex + 1} / {scales.length} 份）
-              </span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-hope-600 text-sm font-medium">
+              <ClipboardList className="w-4 h-4" />
+              {phase === 'pre' ? '开始前的自我了解' : '结束后的自我对照'}
+              {scales.length > 1 && (
+                <span className="text-stone-400 font-normal">
+                  （第 {scaleIndex + 1} / {scales.length} 份）
+                </span>
+              )}
+            </div>
+            {onSkip && (
+              <button
+                onClick={onSkip}
+                className="text-xs text-stone-500 hover:text-stone-700 underline shrink-0"
+              >
+                跳过评估
+              </button>
             )}
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-warm-800">{copy.title}</h1>

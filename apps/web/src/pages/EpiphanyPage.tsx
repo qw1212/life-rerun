@@ -1,13 +1,22 @@
 import { motion } from 'framer-motion'
-import type { GameEvent, StoryOption } from '@life-rerun/shared'
+import {
+  OPTION_TYPE_META,
+  isOptionUnlocked,
+  type GameEvent,
+  type PlayerState,
+  type StoryOption,
+} from '@life-rerun/shared'
 import { Lightbulb, Sparkles } from 'lucide-react'
 
 interface Props {
   event: GameEvent
+  player: PlayerState
   onSelect: (option: StoryOption) => void
 }
 
-export function EpiphanyPage({ event, onSelect }: Props) {
+export function EpiphanyPage({ event, player, onSelect }: Props) {
+  const options = event.options.filter((option) => isOptionUnlocked(player, option))
+
   return (
     <motion.article
       initial={{ opacity: 0, scale: 0.98 }}
@@ -34,14 +43,14 @@ export function EpiphanyPage({ event, onSelect }: Props) {
       </div>
 
       <div className="space-y-3">
-        {event.options.map((option, index) => (
+        {options.map((option, index) => (
           <motion.button
             key={option.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             onClick={() => onSelect(option)}
-            className="group w-full text-left px-5 py-4 rounded-xl border border-purple-100 bg-white hover:border-purple-300 hover:bg-purple-50 transition-all"
+            className="group w-full text-left px-5 py-4 rounded-xl border border-purple-100 bg-white hover:border-purple-300 hover:bg-purple-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 transition-all"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -55,7 +64,12 @@ export function EpiphanyPage({ event, onSelect }: Props) {
                   </div>
                 )}
               </div>
-              <div className="text-xs text-stone-400 capitalize shrink-0">{option.type}</div>
+              <div
+                title={OPTION_TYPE_META[option.type].description}
+                className="text-xs text-stone-400 shrink-0"
+              >
+                {OPTION_TYPE_META[option.type].label}
+              </div>
             </div>
           </motion.button>
         ))}

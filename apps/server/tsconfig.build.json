@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // 构建时不再把 @life-rerun/shared 映射到源码：
+    // 否则 tsc 会把 shared 源码一起编译，rootDir 被推断到仓库根，
+    // 产物变成 dist/apps/server/src/index.js，与 start / Dockerfile 的
+    // dist/index.js 对不上。构建期改为使用已构建的 workspace 包。
+    "paths": {},
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

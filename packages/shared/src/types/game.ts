@@ -66,6 +66,9 @@ export function getLifeStage(age: number): LifeStage {
   return 'oldAge'
 }
 
+/** 人生推进到这个年龄时进入结局页。 */
+export const ENDING_AGE = 80
+
 /**
  * 人生主题 / 主线分支
  */
@@ -265,12 +268,28 @@ export interface NarrativeRequest {
   currentEvent?: GameEvent
 }
 
+/**
+ * AI 可以返回的事件类型白名单。
+ *
+ * 「低谷」不在此列：低谷事件必须来自经过审核的事件库，
+ * 才能保证每个低谷都配有成长出口，不会把玩家写进没有出路的处境。
+ */
+export type AIGeneratedEventType = Extract<EventType, 'normal' | 'highlight' | 'insight' | 'breather'>
+
 export interface NarrativeResponse {
   story: string
   options: StoryOption[]
   psychologyHint: string
   attributeChanges?: Partial<Record<AttributeKey, number>>
   permaChanges?: Partial<Perma>
+  /** 生成事件的类型，用于保留高光/顿悟等叙事节奏（缺省按普通事件处理） */
+  eventType?: EventType
+  /** 生成事件的标题（缺省由客户端按年龄生成） */
+  eventTitle?: string
+  /** 模板事件库降级时回传原始事件 id，便于客户端记录与去重 */
+  eventId?: string
+  /** 模板事件自带的 PERMA 倾向 */
+  permaTags?: Partial<Perma>
   /** 本次请求的风险分级结果 */
   risk?: RiskAssessment
   /** 是否因高风险而中断叙事（此时 story 与 options 为空） */

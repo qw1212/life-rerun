@@ -331,7 +331,7 @@ export const EVENTS: GameEvent[] = [
     opt('opt-regular', '决定定期去自然中恢复', 'growth', { attributes: { resilience: 2, physique: 1 } }),
     opt('opt-moment', '珍惜此刻的宁静', 'acceptance', { attributes: { resilience: 2 } }),
     opt('opt-invite', '以后带家人一起来', 'relationship', { attributes: { charm: 1, resilience: 1 } }),
-  ], '自然是最好心理急救箱。'),
+  ], '自然是最好的心理急救箱。'),
 
   ev('event-small-victory', 'highlight', 'any', '小小的胜利', '一件你一直害怕的事，今天终于完成了。它没有想象中可怕。', [
     opt('opt-celebrate', '好好奖励自己', 'acceptance', { attributes: { resilience: 2 }, perma: { positive: 1 } }),
@@ -342,7 +342,7 @@ export const EVENTS: GameEvent[] = [
   ev('event-random-kindness', 'normal', 'any', '日行一善', '今天你有机会做一件很小但正确的事：帮邻居取快递，或者给外卖小哥递一瓶水。', [
     opt('opt-do-it', '毫不犹豫地去做', 'meaning', { attributes: { charm: 1, resilience: 1 } }),
     opt('opt-busy', '今天太忙，下次吧', 'safe', { attributes: { resilience: 1 } }),
-    opt('opt-make-habit', '把 small kindness 变成习惯', 'growth', { attributes: { charm: 2, resilience: 1 } }),
+    opt('opt-make-habit', '把小小的善意变成习惯', 'growth', { attributes: { charm: 2, resilience: 1 } }),
   ], '善良不需要理由，它本身就是回报。'),
 
   // ===== 贵人事件 2 =====
@@ -393,6 +393,166 @@ export const EVENTS: GameEvent[] = [
       },
     }),
   ], '真正的友谊是彼此见证成长。', { minAge: 12 }),
+
+  // ===== 主线专属事件：让「人生主线」真正影响事件池 =====
+  // 学术线
+  ev('event-thesis-doubt', 'milestone', 'youth', '论文被当场质疑', '答辩现场，一位评委逐条指出你研究里的漏洞。你准备了很久，却在那一刻脑子一片空白。', [
+    opt('opt-check-data', '回去逐条核对数据与方法', 'growth', {
+      attributes: { intelligence: 2, resilience: 1 },
+      perma: { engagement: 1 },
+    }, '把质疑变成改进清单'),
+    opt('opt-ask-advisor', '找导师讨论，而不是独自硬扛', 'relationship', {
+      attributes: { charm: 1, intelligence: 1 },
+      perma: { relationships: 1 },
+    }),
+    opt('opt-sleep-first', '先睡一觉，明天再处理', 'acceptance', {
+      attributes: { resilience: 2 },
+      perma: { positive: 1 },
+    }),
+  ], '质疑针对的是论证，不是你这个人。', { minAge: 20, maxAge: 45, theme: 'academic' }),
+
+  ev('event-lab-night', 'normal', 'middleAge', '实验室的深夜', '仪器还在运转，窗外只剩路灯。你忽然想不起自己上一次按时吃饭是什么时候。', [
+    opt('opt-record', '记录今天的进展，然后收工', 'growth', {
+      attributes: { intelligence: 1, resilience: 1 },
+      perma: { achievement: 1 },
+    }),
+    opt('opt-call-family', '给家人打个电话', 'relationship', {
+      attributes: { charm: 2 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-go-home', '允许自己早点回家', 'acceptance', {
+      attributes: { resilience: 2, physique: 1 },
+      perma: { positive: 1 },
+    }),
+  ], '热爱需要被可持续地供养，而不是一次性烧完。', { minAge: 26, maxAge: 55, theme: 'academic' }),
+
+  // 创业线
+  ev('event-funding-reject', 'low', 'youth', '融资被拒', '你带着准备了三个月的方案路演，投资人礼貌地听完，然后说「再看看吧」。团队还在等你的消息。', [
+    opt('opt-review-model', '复盘商业模型，找到真正的问题', 'growth', {
+      attributes: { intelligence: 2, resilience: 2 },
+      perma: { achievement: 1 },
+    }),
+    opt('opt-tell-team', '和团队坦诚沟通现状', 'relationship', {
+      attributes: { charm: 2, resilience: 1 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-grieve', '允许自己难过一晚，明天再继续', 'acceptance', {
+      attributes: { resilience: 2 },
+      perma: { positive: 1 },
+    }),
+  ], '一次拒绝是市场反馈，不是对你这个人的判决。', { minAge: 22, maxAge: 40, theme: 'startup' }),
+
+  ev('event-team-conflict', 'normal', 'youth', '合伙人分歧', '你和合伙人对着同一张白板，却给出了完全不同的方向。气氛一点点僵住。', [
+    opt('opt-common-goal', '先回到共同目标，再谈方法', 'relationship', {
+      attributes: { charm: 2, intelligence: 1 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-set-boundary', '明确股权与决策边界', 'safe', {
+      attributes: { intelligence: 1, wealth: 1 },
+      perma: { achievement: 1 },
+    }),
+    opt('opt-part-ways', '如果方向真的不同，就好聚好散', 'acceptance', {
+      attributes: { resilience: 2 },
+      perma: { positive: 1 },
+    }),
+  ], '把分歧摊开，比维持表面和平更负责任。', { minAge: 22, maxAge: 40, theme: 'startup' }),
+
+  // 艺术线
+  ev('event-plagiarism', 'low', 'middleAge', '作品被抄袭', '你发现自己的作品被另一个人原样搬走，还署上了对方的名字。愤怒和无力一起涌上来。', [
+    opt('opt-keep-evidence', '保留证据，走正式渠道维权', 'safe', {
+      attributes: { intelligence: 2, resilience: 1 },
+      perma: { achievement: 1 },
+    }),
+    opt('opt-create-again', '把愤怒写进下一件作品', 'growth', {
+      attributes: { charm: 2, resilience: 2 },
+      perma: { engagement: 2 },
+    }),
+    opt('opt-care-first', '先照顾自己的情绪，再决定怎么做', 'acceptance', {
+      attributes: { resilience: 3 },
+      perma: { positive: 1 },
+    }),
+  ], '你的创造力不会被偷走，它只属于你。', { minAge: 30, maxAge: 55, theme: 'art' }),
+
+  ev('event-first-exhibition', 'highlight', 'youth', '第一次个展', '展厅的灯亮起来，你的作品挂在墙上。有人停下来看了很久。', [
+    opt('opt-invite', '邀请重要的人来看', 'relationship', {
+      attributes: { charm: 2 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-observe', '站在角落，观察观众的反应', 'growth', {
+      attributes: { intelligence: 1, resilience: 1 },
+      perma: { engagement: 1 },
+    }),
+    opt('opt-gift', '把一幅小作品送给陌生的观众', 'meaning', {
+      attributes: { charm: 1, resilience: 1 },
+      perma: { meaning: 2 },
+    }),
+  ], '被看见的同时，也别忘了自己为什么创作。', {
+    minAge: 22,
+    maxAge: 45,
+    theme: 'art',
+  }),
+
+  // 社会服务线
+  ev('event-helper-burnout', 'low', 'middleAge', '助人者的耗竭', '你一直在回应别人的需要，直到某天发现自己连一句安慰的话都说不出来。', [
+    opt('opt-admit', '承认自己也需要帮助', 'growth', {
+      attributes: { resilience: 3 },
+      perma: { positive: 1 },
+    }),
+    opt('opt-reduce-load', '暂时减少服务量，先把身体养回来', 'acceptance', {
+      attributes: { resilience: 2, physique: 1 },
+      perma: { positive: 1 },
+    }),
+    opt('opt-support-group', '和同伴建立支持小组', 'relationship', {
+      attributes: { charm: 2, resilience: 1 },
+      perma: { relationships: 2 },
+    }),
+  ], '照顾自己不是自私，是让善意能够持续。', { minAge: 30, maxAge: 55, theme: 'social' }),
+
+  ev('event-thank-you-letter', 'highlight', 'any', '一封感谢信', '你曾帮助过的人寄来一封信，说那段日子因为你的存在变得不那么难熬。', [
+    opt('opt-reply', '认真读完，并回一封信', 'relationship', {
+      attributes: { charm: 2 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-share-team', '把这份信任告诉一起做事的伙伴', 'meaning', {
+      attributes: { charm: 1, resilience: 1 },
+      perma: { meaning: 2 },
+    }),
+    opt('opt-keep-boundary', '收下感谢，也提醒自己保持边界', 'safe', {
+      attributes: { resilience: 2 },
+      perma: { positive: 1 },
+    }),
+  ], '你改变过别人的生活，这不是负担，是证据。', { minAge: 20, theme: 'social' }),
+
+  // 平凡幸福线
+  ev('event-family-dinner', 'normal', 'middleAge', '一顿家常晚饭', '餐桌上摆着几道普通的菜，家人聊着琐碎的事。你手机里还有没回完的消息。', [
+    opt('opt-put-phone', '关掉手机，好好吃完这顿饭', 'relationship', {
+      attributes: { charm: 2 },
+      perma: { relationships: 2, positive: 1 },
+    }),
+    opt('opt-listen-past', '听长辈讲讲他们年轻时的故事', 'meaning', {
+      attributes: { resilience: 1, charm: 1 },
+      perma: { meaning: 2 },
+    }),
+    opt('opt-cook', '下次主动做一道菜', 'growth', {
+      attributes: { physique: 1, charm: 1 },
+      perma: { engagement: 1 },
+    }),
+  ], '平凡的晚餐，是很多人求而不得的幸福。', { minAge: 32, maxAge: 55, theme: 'ordinary' }),
+
+  ev('event-neighbor-help', 'normal', 'any', '邻居的请求', '邻居临时有事，问你能否帮忙接一下孩子。你手里还有一件没做完的事。', [
+    opt('opt-help-now', '放下手里的事去帮忙', 'relationship', {
+      attributes: { charm: 2, resilience: 1 },
+      perma: { relationships: 2 },
+    }),
+    opt('opt-negotiate', '约定一个双方都方便的时间', 'safe', {
+      attributes: { charm: 1, resilience: 1 },
+      perma: { positive: 1 },
+    }),
+    opt('opt-decline', '坦诚说明今天不方便', 'acceptance', {
+      attributes: { resilience: 2 },
+      perma: { positive: 1 },
+    }),
+  ], '善良需要边界，才能长久。', { minAge: 18, theme: 'ordinary' }),
 ]
 
 export function getEventById(id: string): GameEvent | undefined {

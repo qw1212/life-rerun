@@ -5,6 +5,7 @@ node_modules/
 
 # Build outputs
 dist/
+dist-test/
 build/
 *.tsbuildinfo
 
@@ -26,6 +27,9 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local tooling
+.playwright-cli/
 
 # Logs
 logs/

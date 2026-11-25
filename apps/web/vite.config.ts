@@ -1,8 +1,18 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // 直接指向源码：否则改 shared 后必须先 build，Web 端的 HMR 才能看到新导出
+      '@life-rerun/shared': fileURLToPath(
+        new URL('../../packages/shared/src/index.ts', import.meta.url)
+      ),
+    },
+  },
+
   plugins: [
     react(),
     VitePWA({
@@ -28,6 +38,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        // /api 请求绝不能回退到 index.html，否则接口错误会被当成正常响应解析
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -44,6 +58,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {

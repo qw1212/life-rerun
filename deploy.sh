@@ -24,13 +24,21 @@ npm run typecheck
 echo "🧹 代码检查..."
 npm run lint
 
+echo "🧪 运行测试..."
+npm run test
+
 echo "🏗️  构建..."
 npm run build
 
-# Docker 部署
+# Docker 部署：新版 Docker 已内置 compose 子命令，旧环境仍是独立命令
 echo "🐳 启动 Docker Compose..."
-docker-compose down
-docker-compose up --build -d
+if command -v docker-compose >/dev/null 2>&1; then
+  docker-compose down
+  docker-compose up --build -d
+else
+  docker compose down
+  docker compose up --build -d
+fi
 
 echo "✅ 部署完成！"
 echo "🌐 访问 http://localhost"

@@ -1,6 +1,12 @@
 import { motion } from 'framer-motion'
-import type { GameEvent, StoryOption, PlayerState } from '@life-rerun/shared'
-import { isOptionUnlocked } from '@life-rerun/shared'
+import {
+  EVENT_TYPE_META,
+  OPTION_TYPE_META,
+  isOptionUnlocked,
+  type GameEvent,
+  type StoryOption,
+  type PlayerState,
+} from '@life-rerun/shared'
 import { Sparkles, Lock } from 'lucide-react'
 
 interface Props {
@@ -18,26 +24,9 @@ const TYPE_BADGE: Record<GameEvent['type'], string> = {
   milestone: 'bg-warm-200 text-warm-800',
 }
 
-const TYPE_LABEL: Record<GameEvent['type'], string> = {
-  normal: '日常',
-  highlight: '高光',
-  low: '低谷',
-  insight: '顿悟',
-  breather: '喘息',
-  milestone: '节点',
-}
-
-const OPTION_TYPE_LABEL: Record<StoryOption['type'], string> = {
-  safe: '稳妥',
-  adventure: '冒险',
-  relationship: '关系',
-  growth: '成长',
-  acceptance: '接纳',
-  meaning: '意义',
-}
-
 export function EventCard({ event, player, onSelect }: Props) {
   const visibleOptions = event.options.filter((option) => isOptionUnlocked(player, option))
+  const typeMeta = EVENT_TYPE_META[event.type]
 
   return (
     <motion.article
@@ -49,8 +38,11 @@ export function EventCard({ event, player, onSelect }: Props) {
       className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm"
     >
       <div className="flex items-center gap-3 mb-4">
-        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${TYPE_BADGE[event.type]}`}>
-          {TYPE_LABEL[event.type]}
+        <span
+          title={typeMeta.description}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium ${TYPE_BADGE[event.type]}`}
+        >
+          {typeMeta.label}
         </span>
         <h2 className="text-xl sm:text-2xl font-bold text-warm-800">{event.title}</h2>
       </div>
@@ -68,9 +60,9 @@ export function EventCard({ event, player, onSelect }: Props) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.08 }}
               onClick={() => onSelect(option)}
-              className="group w-full text-left px-5 py-4 rounded-xl border border-warm-200 hover:border-hope-400 hover:bg-hope-50 transition-all"
+              className="group w-full text-left px-5 py-4 rounded-xl border border-warm-200 hover:border-hope-400 hover:bg-hope-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-hope-400 transition-all"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="font-medium text-stone-800 group-hover:text-hope-800 transition-colors">
                     {option.text}
@@ -82,15 +74,18 @@ export function EventCard({ event, player, onSelect }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="text-xs text-stone-400 capitalize ml-3 shrink-0">
-                  {OPTION_TYPE_LABEL[option.type]}
+                <div
+                  title={OPTION_TYPE_META[option.type].description}
+                  className="text-xs text-stone-400 ml-3 shrink-0"
+                >
+                  {OPTION_TYPE_META[option.type].label}
                 </div>
               </div>
             </motion.button>
           ))
         )}
 
-        {event.options.some((option) => option.hidden) && (
+        {event.options.some((option) => option.hidden && !isOptionUnlocked(player, option)) && (
           <div className="flex items-center gap-1.5 text-xs text-stone-400 pt-1">
             <Lock className="w-3 h-3" />
             部分隐藏选项将根据你的属性或经历解锁

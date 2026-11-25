@@ -24,13 +24,21 @@ npm run typecheck
 Write-Host "🧹 代码检查..." -ForegroundColor Cyan
 npm run lint
 
+Write-Host "🧪 运行测试..." -ForegroundColor Cyan
+npm run test
+
 Write-Host "🏗️  构建..." -ForegroundColor Cyan
 npm run build
 
-# Docker 部署
+# Docker 部署：新版 Docker Desktop 已内置 compose 子命令，旧环境仍是独立命令
 Write-Host "🐳 启动 Docker Compose..." -ForegroundColor Cyan
-docker-compose down
-docker-compose up --build -d
+if (Get-Command docker-compose -ErrorAction SilentlyContinue) {
+    docker-compose down
+    docker-compose up --build -d
+} else {
+    docker compose down
+    docker compose up --build -d
+}
 
 Write-Host "✅ 部署完成！" -ForegroundColor Green
 Write-Host "🌐 访问 http://localhost"

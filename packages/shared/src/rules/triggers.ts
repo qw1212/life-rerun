@@ -66,8 +66,24 @@ export function canTriggerEvent(player: PlayerState, event: GameEvent): boolean 
   )
 }
 
+/** 玩家是否已经历过某个事件 */
+export function hasSeenEvent(player: PlayerState, eventId: string): boolean {
+  return player.history.some((record) => record.eventId === eventId)
+}
+
 /**
- * 计算事件触发权重（运气加权 + 主线匹配加权）
+ * 是否可以作为「普通推进」事件抽取。
+ *
+ * 顿悟与喘息只能由心理急救链路（低谷之后 / 近期低谷密集）触发。
+ * 如果把它们混进普通事件池，玩家会在没有任何挫折时突然「顿悟」，
+ * 心理设计就失真了。
+ */
+export function isStandardEvent(event: GameEvent): boolean {
+  return event.type !== 'insight' && event.type !== 'breather'
+}
+
+/**
+ * 计算事件触发权重（运气加权 + 主线匹配加权 + 天赋解锁加权）
  */
 export function calcEventWeight(player: PlayerState, event: GameEvent): number {
   const baseProbability = event.triggerCondition?.probability ?? 1
@@ -75,7 +91,13 @@ export function calcEventWeight(player: PlayerState, event: GameEvent): number {
   const luck = Math.max(0, player.attributes.luck)
   const themeBonus =
     player.theme !== 'undecided' && event.triggerCondition?.theme === player.theme ? 1.5 : 0
-  return baseProbability + (luck / 100) * luckWeight + themeBonus
+  // 特殊天赋写明了「解锁某段剧情」时，让它真正更容易出现，而不是只写在描述里
+  const talentBonus = player.talents.some((talent) =>
+    talent.effect.unlockEventIds?.includes(event.id)
+  )
+    ? 2
+    : 0
+  return Math.max(0, baseProbability + (luck / 100) * luckWeight + themeBonus + talentBonus)
 }
 
 /**
@@ -104,6 +126,7 @@ export function isOptionUnlocked(player: PlayerState, option: StoryOption): bool
 export function pickWeightedEvent(candidates: GameEvent[], weights: number[]): GameEvent | null {
   if (candidates.length === 0) return null
   const total = weights.reduce((sum, w) => sum + w, 0)
+  if (total <= 0) return candidates[0]
   let random = Math.random() * total
   for (let i = 0; i < candidates.length; i++) {
     random -= weights[i]
@@ -112,13 +135,63 @@ export function pickWeightedEvent(candidates: GameEvent[], weights: number[]): G
   return candidates[candidates.length - 1]
 }
 
+export interface PickEventOptions {
+  /**
+   * 允许重复已经历过的事件。
+   * 心理急救（喘息/顿悟）必须允许重复：如果连一个未触发过的支持事件都没有，
+   * 玩家会被卡在低谷里没有任何缓冲。
+   */
+  allowRepeats?: boolean
+}
+
 /**
- * 心理急救：连续低谷后强制插入喘息事件
+ * 挑选下一个事件。
+ *
+ * 默认优先挑选玩家没经历过的事件，只有当候选池全部经历过时才允许重复，
+ * 否则 80 年人生里同一个故事会反复出现，叙事体验会迅速崩坏。
  */
-export function needsBreather(player: PlayerState, recentCount = 3): boolean {
-  const recent = player.history.slice(-recentCount)
-  if (recent.length < recentCount) return false
-  return recent.every((h) => h.eventType === 'low')
+export function pickEventForPlayer(
+  player: PlayerState,
+  candidates: GameEvent[],
+  options: PickEventOptions = {}
+): GameEvent | null {
+  const eligible = candidates.filter((event) => canTriggerEvent(player, event))
+  if (eligible.length === 0) return null
+
+  if (options.allowRepeats) {
+    return pickWeightedEvent(
+      eligible,
+      eligible.map((event) => calcEventWeight(player, event))
+    )
+  }
+
+  const unseen = eligible.filter((event) => !hasSeenEvent(player, event.id))
+  const pool = unseen.length > 0 ? unseen : eligible
+  return pickWeightedEvent(
+    pool,
+    pool.map((event) => calcEventWeight(player, event))
+  )
+}
+
+/**
+ * 心理急救：近期低谷密集时强制插入喘息事件。
+ *
+ * 注意不能用「连续 3 个低谷」作为条件：低谷之后一定会插入顿悟事件，
+ * 历史记录里永远不可能出现 3 个连续低谷，那条判断实际上永远不会生效。
+ * 这里改为「最近 4 段人生里出现 2 次低谷」，并把刚喘息过的情况排除，
+ * 避免喘息事件自己把自己再次触发。
+ */
+export function needsBreather(
+  player: PlayerState,
+  options: { lookback?: number; threshold?: number } = {}
+): boolean {
+  const lookback = options.lookback ?? 4
+  const threshold = options.threshold ?? 2
+  const recent = player.history.slice(-lookback)
+  if (recent.length < threshold) return false
+  const last = recent[recent.length - 1]
+  if (last?.eventType === 'breather') return false
+  return recent.filter((record) => record.eventType === 'low').length >= threshold
 }
 
 /**

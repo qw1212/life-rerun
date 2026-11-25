@@ -53,6 +53,15 @@ export function BreathingOverlay({ open, onClose }: Props) {
     return () => clearInterval(interval)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose])
+
   return (
     <AnimatePresence>
       {open && (
@@ -60,10 +69,15 @@ export function BreathingOverlay({ open, onClose }: Props) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="呼吸放松"
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-warm-50/95 backdrop-blur-sm p-6"
         >
           <button
             onClick={onClose}
+            aria-label="关闭呼吸引导"
+            autoFocus
             className="absolute top-6 right-6 p-2 rounded-full bg-white shadow-sm text-stone-600 hover:bg-stone-100"
           >
             <X className="w-5 h-5" />

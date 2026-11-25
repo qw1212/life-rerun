@@ -65,8 +65,8 @@ export function detectTheme(player: PlayerState): LifeTheme {
 }
 
 /**
- * 临时推断：根据选项文本关键词推断选项类型
- * 后续应在 HistoryRecord 中直接记录 optionType
+ * 兼容旧存档：早期历史记录没有 selectedOptionType 字段，
+ * 只能退回到关键词推断；新记录一律直接使用真实选项类型。
  */
 function inferOptionType(text: string): OptionType {
   const t = text.toLowerCase()

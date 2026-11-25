@@ -1,5 +1,6 @@
 export * from './types/game.js'
 export * from './types/assessment.js'
+export * from './data/labels.js'
 export * from './data/talents.js'
 export * from './data/events.js'
 export * from './data/assessments.js'
